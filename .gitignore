@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# Scratch output of `--quick` runs; the full results in results/ are committed.
+results/quick/
+
+# OpenFermion/PySCF integral caches
+*.hdf5

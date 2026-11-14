@@ -1,0 +1,19 @@
+[project]
+name = "gpu-quantum-sim"
+version = "1.0.0"
+description = "GPU-accelerated quantum simulation and quantum chemistry with NVIDIA CUDA-Q"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+markers = [
+    "gpu: needs an NVIDIA GPU and the CUDA-Q 'nvidia' target",
+]
+filterwarnings = [
+    # CUDA-Q 0.16 announces upcoming sample/observe changes on import; the
+    # version is pinned in requirements.txt, so keep test output readable.
+    "ignore:The CUDA-Q `sample` and `observe`:FutureWarning",
+]

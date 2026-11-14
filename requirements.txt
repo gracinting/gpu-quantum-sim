@@ -1,0 +1,15 @@
+# Tested together on Python 3.12 (CUDA-Q 0.16 requires Python >= 3.11).
+#
+# `cudaq` is a small metapackage: at install time it detects the local CUDA
+# version and pulls in the matching binary wheel (cuda-quantum-cu12 or -cu13).
+# On machines without an NVIDIA GPU, including macOS on Apple silicon, the
+# same pin installs the CPU-only simulators.
+cudaq==0.16.0
+numpy==2.5.4
+scipy==1.18.1
+matplotlib==3.11.2
+pyscf==2.15.0
+openfermion==1.8.1
+openfermionpyscf==0.5
+psutil==7.2.2
+pytest==9.2.0

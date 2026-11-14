@@ -1,0 +1,67 @@
+{
+  "generated_utc": "2026-11-14T00:05:38+00:00",
+  "config": {
+    "min_qubits": 20,
+    "max_qubits": 30,
+    "shots": 1000,
+    "warmup": 1,
+    "repeats": 5,
+    "targets": [
+      "qpp-cpu",
+      "nvidia"
+    ],
+    "time_budget_s": 600.0,
+    "safety_factor": 0.8,
+    "quick": false
+  },
+  "precision": {
+    "qpp-cpu": "fp64"
+  },
+  "hardware": {
+    "cpu": "Apple M3",
+    "cpu_cores": 8,
+    "ram_gib": 16.0,
+    "gpu": null,
+    "gpu_target_available": false,
+    "os": "Darwin 25.6.0 (arm64)",
+    "python": "3.12.16",
+    "cudaq": "0.16.0"
+  },
+  "skipped": [
+    {
+      "target": "qpp-cpu",
+      "n": 25,
+      "reason": "projected 792 s for 6 runs exceeds the 600 s per-point time budget"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 26,
+      "reason": "projected 1610 s for 6 runs exceeds the 600 s per-point time budget"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 27,
+      "reason": "projected 3274 s for 6 runs exceeds the 600 s per-point time budget"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 28,
+      "reason": "statevector needs 4.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 29,
+      "reason": "statevector needs 8.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 30,
+      "reason": "statevector needs 16.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
+    },
+    {
+      "target": "nvidia",
+      "n": null,
+      "reason": "no NVIDIA GPU visible to CUDA-Q on this machine, so the 'nvidia' target was skipped. Run notebooks/colab_quickstart.ipynb on a GPU runtime for the GPU half of the benchmark."
+    }
+  ]
+}
