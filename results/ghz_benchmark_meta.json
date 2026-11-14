@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-14T00:05:38+00:00",
+  "generated_utc": "2026-11-14T02:23:49+00:00",
   "config": {
     "min_qubits": 20,
     "max_qubits": 30,
@@ -15,53 +15,63 @@
     "quick": false
   },
   "precision": {
-    "qpp-cpu": "fp64"
+    "qpp-cpu": "fp64",
+    "nvidia": "fp32"
   },
   "hardware": {
-    "cpu": "Apple M3",
-    "cpu_cores": 8,
-    "ram_gib": 16.0,
-    "gpu": null,
-    "gpu_target_available": false,
-    "os": "Darwin 25.6.0 (arm64)",
-    "python": "3.12.16",
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.00GHz",
+    "cpu_cores": 1,
+    "ram_gib": 12.7,
+    "gpu": {
+      "name": "Tesla T4",
+      "total_bytes": 16106127360,
+      "free_bytes": 6872367104
+    },
+    "gpu_target_available": true,
+    "os": "Linux 6.6.159+ (x86_64)",
+    "python": "3.13.16",
     "cudaq": "0.16.0"
   },
   "skipped": [
     {
       "target": "qpp-cpu",
+      "n": 23,
+      "reason": "projected 623 s for 6 runs exceeds the 600 s per-point time budget"
+    },
+    {
+      "target": "qpp-cpu",
+      "n": 24,
+      "reason": "projected 1351 s for 6 runs exceeds the 600 s per-point time budget"
+    },
+    {
+      "target": "qpp-cpu",
       "n": 25,
-      "reason": "projected 792 s for 6 runs exceeds the 600 s per-point time budget"
+      "reason": "projected 2930 s for 6 runs exceeds the 600 s per-point time budget"
     },
     {
       "target": "qpp-cpu",
       "n": 26,
-      "reason": "projected 1610 s for 6 runs exceeds the 600 s per-point time budget"
+      "reason": "projected 6354 s for 6 runs exceeds the 600 s per-point time budget"
     },
     {
       "target": "qpp-cpu",
       "n": 27,
-      "reason": "projected 3274 s for 6 runs exceeds the 600 s per-point time budget"
+      "reason": "projected 13778 s for 6 runs exceeds the 600 s per-point time budget"
     },
     {
       "target": "qpp-cpu",
       "n": 28,
-      "reason": "statevector needs 4.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
+      "reason": "projected 29878 s for 6 runs exceeds the 600 s per-point time budget"
     },
     {
       "target": "qpp-cpu",
       "n": 29,
-      "reason": "statevector needs 8.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
+      "reason": "projected 64789 s for 6 runs exceeds the 600 s per-point time budget"
     },
     {
       "target": "qpp-cpu",
       "n": 30,
-      "reason": "statevector needs 16.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it)"
-    },
-    {
-      "target": "nvidia",
-      "n": null,
-      "reason": "no NVIDIA GPU visible to CUDA-Q on this machine, so the 'nvidia' target was skipped. Run notebooks/colab_quickstart.ipynb on a GPU runtime for the GPU half of the benchmark."
+      "reason": "statevector needs 16.00 GiB but only 11.20 GiB RAM is free (using at most 80% of it)"
     }
   ]
 }

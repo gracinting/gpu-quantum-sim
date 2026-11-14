@@ -1,7 +1,7 @@
 # gpu-quantum-sim
 
 <!-- AUTO:summary:START -->
-**gpu-quantum-sim** simulates quantum circuits on classical hardware with [NVIDIA CUDA-Q](https://developer.nvidia.com/cuda-q) and uses that simulator to solve a small quantum-chemistry problem end to end. GHZ circuits were simulated up to **24 qubits** (256 MiB statevector) on the CPU backend (Apple M3). **GPU speedup: not measured yet.** The committed results come from a machine without an NVIDIA GPU, so the GPU half of the benchmark was detected as unavailable and skipped; [run the Colab notebook](notebooks/colab_quickstart.ipynb) on a free T4 to produce it. A VQE with a UCCSD ansatz reproduces the H₂ potential energy curve at 45 bond lengths with a maximum error of **1.3 × 10⁻⁸ mHa** against exact FCI (chemical accuracy is 1.6 mHa) and finds the equilibrium bond length at **0.735 Å** with E = **−1.1373 Ha**. Every number on this page is generated from the CSV files in [`results/`](results) by [`src/make_readme.py`](src/make_readme.py).
+**gpu-quantum-sim** simulates quantum circuits on classical hardware with [NVIDIA CUDA-Q](https://developer.nvidia.com/cuda-q) and uses that simulator to solve a small quantum-chemistry problem end to end. GHZ circuits were simulated up to **30 qubits** (8 GiB statevector, 884.9 ms per run) on a Tesla T4 GPU (cuStateVec). At 22 qubits, the largest size both backends completed, the GPU was **10,300× faster** than CUDA-Q's `qpp-cpu` backend on the same machine (Intel(R) Xeon(R) CPU @ 2.00GHz, 1 physical core); that baseline is a double-precision reference simulator, so read the factor with the [limitations](#limitations) in mind. A VQE with a UCCSD ansatz reproduces the H₂ potential energy curve at 45 bond lengths with a maximum error of **9.8 × 10⁻⁹ mHa** against exact FCI (chemical accuracy is 1.6 mHa) and finds the equilibrium bond length at **0.735 Å** with E = **−1.1373 Ha**. Every number on this page is generated from the CSV files in [`results/`](results) by [`src/make_readme.py`](src/make_readme.py).
 <!-- AUTO:summary:END -->
 
 ## Results
@@ -13,21 +13,28 @@ An n-qubit GHZ state, (|00…0⟩ + |11…1⟩)/√2, is prepared with one Hadam
 ![Runtime against qubit count for each backend](results/ghz_benchmark.png)
 
 <!-- AUTO:ghz:START -->
-| Qubits | Amplitudes | Statevector (fp64) | CPU `qpp-cpu` median ± std |
-|---:|---:|---:|---:|
-| 20 | 2^20 | 16 MiB | 2.48 s ± 10.1 ms |
-| 21 | 2^21 | 32 MiB | 5.36 s ± 25.1 ms |
-| 22 | 2^22 | 64 MiB | 13.52 s ± 1.21 s |
-| 23 | 2^23 | 128 MiB | 31.92 s ± 1.52 s |
-| 24 | 2^24 | 256 MiB | 64.90 s ± 2.31 s |
+![GPU speedup over CPU against qubit count](results/ghz_speedup.png)
+
+| Qubits | Amplitudes | CPU `qpp-cpu` (fp64) | GPU `nvidia` (fp32) | Speedup |
+|---:|---:|---:|---:|---:|
+| 20 | 2^20 | 10.19 ± 0.59 s | 2.30 ± 0.08 ms | 4,430× |
+| 21 | 2^21 | 22.09 ± 0.61 s | 2.82 ± 0.09 ms | 7,820× |
+| 22 | 2^22 | 47.89 ± 0.68 s | 4.63 ± 0.12 ms | 10,300× |
+| 23 | 2^23 | — | 7.04 ± 0.06 ms | — |
+| 24 | 2^24 | — | 12.79 ± 0.36 ms | — |
+| 25 | 2^25 | — | 24.31 ± 0.28 ms | — |
+| 26 | 2^26 | — | 49.09 ± 0.05 ms | — |
+| 27 | 2^27 | — | 102.49 ± 0.13 ms | — |
+| 28 | 2^28 | — | 204.23 ± 0.15 ms | — |
+| 29 | 2^29 | — | 422.25 ± 0.30 ms | — |
+| 30 | 2^30 | — | 884.88 ± 0.54 ms | — |
 
 Each cell is the median ± standard deviation of 5 timed runs after 1 warm-up, 1000 shots per run, timing the whole `cudaq.sample` call (state allocation, gates and sampling).
 
 Points that were deliberately not run:
 
-- `qpp-cpu`, n = 25–27: at n = 25, projected 792 s for 6 runs exceeds the 600 s per-point time budget.
-- `qpp-cpu`, n = 28–30: at n = 28, statevector needs 4.00 GiB but only 2.84 GiB RAM is free (using at most 80% of it).
-- `nvidia`: no NVIDIA GPU visible to CUDA-Q on this machine, so the 'nvidia' target was skipped. Run notebooks/colab_quickstart.ipynb on a GPU runtime for the GPU half of the benchmark.
+- `qpp-cpu`, n = 23–29: at n = 23, projected 623 s for 6 runs exceeds the 600 s per-point time budget.
+- `qpp-cpu`, n = 30: statevector needs 16.00 GiB but only 11.20 GiB RAM is free (using at most 80% of it).
 <!-- AUTO:ghz:END -->
 
 ### 2. H₂ ground-state energy with VQE
@@ -43,11 +50,11 @@ Points that were deliberately not run:
 |:---|:---|
 | Qubits / Pauli terms in the Hamiltonian | 4 / 15 (including the identity) |
 | UCCSD parameters | 3 (2 single + 1 double excitation) |
-| VQE energy at R = 0.735 Å | −1.137306 Ha after 73 energy evaluations (COBYLA, cold start from Hartree-Fock) |
+| VQE energy at R = 0.735 Å | −1.137306 Ha after 70 energy evaluations (COBYLA, cold start from Hartree-Fock) |
 | FCI energy at R = 0.735 Å | −1.137306 Ha |
-| Error at that geometry | 1.1 × 10⁻¹⁰ mHa |
+| Error at that geometry | 1.7 × 10⁻¹⁰ mHa |
 | Bond-length scan | 45 points, 0.30–2.50 Å in 0.05 Å steps, warm-started point to point |
-| **Maximum VQE error over the scan** | **1.3 × 10⁻⁸ mHa** at R = 2.50 Å (target: < 1.6 mHa) |
+| **Maximum VQE error over the scan** | **9.8 × 10⁻⁹ mHa** at R = 2.50 Å (target: < 1.6 mHa) |
 | Maximum Hartree-Fock error over the scan | 233 mHa at R = 2.50 Å |
 | **Equilibrium bond length (VQE)** | **0.735 Å** |
 | **Minimum energy (VQE)** | **−1.1373 Ha** |
@@ -93,10 +100,10 @@ Along the bond-length scan each geometry is warm-started from its neighbour's op
 ## Hardware used
 
 <!-- AUTO:hardware:START -->
-- **CPU:** Apple M3 (8 cores), 16 GiB RAM
-- **GPU:** none detected, so the `nvidia` target was skipped at runtime
-- **OS:** Darwin 25.6.0 (arm64)
-- **Software:** CUDA-Q 0.16.0, Python 3.12.16
+- **CPU:** Intel(R) Xeon(R) CPU @ 2.00GHz (1 physical core), 13 GiB RAM
+- **GPU:** Tesla T4 (15 GiB VRAM)
+- **OS:** Linux 6.6.159+ (x86_64)
+- **Software:** CUDA-Q 0.16.0, Python 3.13.16
 - **Benchmark run:** 2026-11-14 (UTC)
 <!-- AUTO:hardware:END -->
 
@@ -155,14 +162,12 @@ results/             committed CSV, JSON and PNG outputs of the full run
 
 - **This is classical simulation.** No quantum hardware is involved, and the simulated qubits are ideal: no gate noise, no decoherence. The VQE energies are exact expectation values rather than estimates from a finite number of measurements, so the shot noise that dominates VQE on real devices is absent.
 - **H₂ is small enough to solve exactly.** Its 4-qubit Hamiltonian is a 16 × 16 matrix that a laptop diagonalises instantly, and for two electrons UCCSD spans the full space, so matching FCI is the *expected* outcome. The residual error measures optimizer convergence, not the quality of the ansatz. The value here is a validated pipeline, not new chemistry; larger molecules, where UCCSD is approximate and the simulator cost matters, are the natural next step.
-- **Benchmarks depend on the hardware and on the baseline.** Speedups are relative to CUDA-Q's own `qpp-cpu` backend in double precision, while the `nvidia` target runs in single precision. On the macOS wheel `qpp-cpu` used a single core during these runs; a tuned multi-threaded CPU simulator would narrow the gap. Expect different numbers on different machines.
+- **The speedup is against a weak baseline, on one machine.** It compares cuStateVec on the GPU with CUDA-Q's own `qpp-cpu` backend on the CPU of the same machine (see [Hardware used](#hardware-used)). `qpp-cpu` is a general-purpose reference simulator running in double precision, while the `nvidia` target runs in single precision, and a free Colab VM provides a single slow physical core. A performance-tuned, multi-threaded CPU simulator on a workstation would narrow the gap substantially. Read the factor as "CUDA-Q's GPU backend vs. its default CPU backend on this VM", not as "GPU vs. the best a CPU can do".
 - **GHZ is a shallow circuit.** With only n gates, the measured time includes fixed costs (state allocation, sampling) that deeper circuits would amortise, so the speedup shown is specific to this workload.
 - **Pinned to one CUDA-Q release.** CUDA-Q 0.16 announces upcoming changes to `cudaq.sample` and `cudaq.observe`; newer releases may need small updates.
 
 ## Résumé bullet
 
 <!-- AUTO:resume:START -->
-> Statevector simulation of GHZ circuits up to 24 qubits with NVIDIA CUDA-Q (CPU backend), with a GPU/cuStateVec benchmark path that detects hardware at runtime; VQE with a UCCSD ansatz reproduces the H₂ potential energy curve within 1.3 × 10⁻⁸ mHa of FCI (chemical accuracy).
-
-This is the CPU-only version, because no GPU speedup has been measured yet. After a GPU run, `make readme` replaces it with the form “GPU-accelerated statevector simulation up to N qubits with NVIDIA CUDA-Q/cuStateVec (X× speedup over CPU); …” using the measured N and X.
+> GPU-accelerated statevector simulation up to 30 qubits with NVIDIA CUDA-Q/cuStateVec (10,300× speedup over CUDA-Q's CPU backend at 22 qubits on a Tesla T4); VQE with a UCCSD ansatz reproduces the H₂ potential energy curve within 9.8 × 10⁻⁹ mHa of FCI (chemical accuracy).
 <!-- AUTO:resume:END -->

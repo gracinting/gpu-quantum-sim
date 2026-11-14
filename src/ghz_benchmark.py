@@ -416,6 +416,19 @@ def format_seconds(seconds: float) -> str:
     return f"{seconds:.0f} s"
 
 
+def format_speedup(speedup: float) -> str:
+    """Format a speedup factor to three significant figures at most.
+
+    Examples: ``3.4×``, ``212×``, ``10,300×``. Timings vary by a few percent
+    between runs, so more digits would be false precision.
+    """
+    if speedup < 10:
+        return f"{speedup:.1f}×"
+    if speedup < 1000:
+        return f"{speedup:.0f}×"
+    return f"{float(f'{speedup:.3g}'):,.0f}×"
+
+
 def _hardware_subtitle(meta: dict[str, Any]) -> str:
     """Describe the run conditions in one line for a plot subtitle."""
     config = meta.get("config", {})
@@ -490,8 +503,9 @@ def plot_runtime(rows: Sequence[BenchmarkRow], meta: dict[str, Any], path: Path)
         ax, "GHZ statevector simulation: runtime vs. qubit count", _hardware_subtitle(meta)
     )
     # The legend stays even for one series: it is the only place the target
-    # name and its precision appear.
-    ax.legend(loc="upper left")
+    # name and its precision appear. Runtime rises with n, so the lower-right
+    # corner is always clear of data.
+    ax.legend(loc="lower right")
     if drawn < 2 and not rows_for(rows, GPU_TARGET):
         fig.text(
             0.125,
@@ -536,7 +550,7 @@ def plot_speedup(rows: Sequence[BenchmarkRow], meta: dict[str, Any], path: Path)
         color=plotting.MUTED,
     )
     ax.annotate(
-        f"{ys[-1]:.0f}×" if ys[-1] >= 10 else f"{ys[-1]:.1f}×",
+        format_speedup(ys[-1]),
         (xs[-1], ys[-1]),
         xytext=(8, 0),
         textcoords="offset points",
@@ -548,12 +562,12 @@ def plot_speedup(rows: Sequence[BenchmarkRow], meta: dict[str, Any], path: Path)
     if max(ys) / max(min(ys), 1e-12) > 20:
         ax.set_yscale("log")
     ax.set_xlabel("Number of qubits, n")
-    ax.set_ylabel("Speedup (CPU time / GPU time)")
+    ax.set_ylabel("Speedup (qpp-cpu time / nvidia time)")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.margins(x=0.08)
     ax.grid(axis="x", visible=False)
     plotting.set_title(
-        ax, "GPU speedup over CPU for GHZ simulation", _hardware_subtitle(meta)
+        ax, "GPU speedup over CUDA-Q's CPU backend for GHZ simulation", _hardware_subtitle(meta)
     )
     return plotting.save_figure(fig, path)
 

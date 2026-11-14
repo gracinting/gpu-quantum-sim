@@ -10,36 +10,40 @@
   "quick": false,
   "convergence": {
     "bond_length_angstrom": 0.735,
-    "e_vqe_ha": -1.1373060357532931,
-    "e_fci_ha": -1.1373060357534008,
-    "e_hf_ha": -1.1169989967540044,
-    "abs_error_mha": 1.0769163338864018e-10,
-    "n_evaluations": 73
+    "e_vqe_ha": -1.1373060357532245,
+    "e_fci_ha": -1.1373060357533995,
+    "e_hf_ha": -1.1169989967540035,
+    "abs_error_mha": 1.7497114868092467e-10,
+    "n_evaluations": 70
   },
   "scan": {
     "n_points": 45,
     "r_min_angstrom": 0.3,
     "r_max_angstrom": 2.5,
     "step_angstrom": 0.05,
-    "max_abs_error_mha": 1.253808168399928e-08,
+    "max_abs_error_mha": 9.762191055529001e-09,
     "max_abs_error_at_angstrom": 2.5,
-    "total_evaluations": 7151
+    "total_evaluations": 7160
   },
   "equilibrium": {
-    "bond_length_angstrom": 0.7348640987639432,
-    "energy_ha": -1.1373060512210047,
-    "e_fci_ha": -1.1373060512210382
+    "bond_length_angstrom": 0.7348640995003939,
+    "energy_ha": -1.1373060512209656,
+    "e_fci_ha": -1.137306051221038
   },
-  "dissociation_limit_ha": -0.9331636991145504,
+  "dissociation_limit_ha": -0.9331636991145507,
   "chemical_accuracy_mha": 1.6,
   "hardware": {
-    "cpu": "Apple M3",
-    "cpu_cores": 8,
-    "ram_gib": 16.0,
-    "gpu": null,
-    "gpu_target_available": false,
-    "os": "Darwin 25.6.0 (arm64)",
-    "python": "3.12.16",
+    "cpu": "Intel(R) Xeon(R) CPU @ 2.00GHz",
+    "cpu_cores": 1,
+    "ram_gib": 12.7,
+    "gpu": {
+      "name": "Tesla T4",
+      "total_bytes": 16106127360,
+      "free_bytes": 15634268160
+    },
+    "gpu_target_available": true,
+    "os": "Linux 6.6.159+ (x86_64)",
+    "python": "3.13.16",
     "cudaq": "0.16.0"
   }
 }

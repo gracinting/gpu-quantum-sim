@@ -73,16 +73,18 @@ def format_scientific(value: float, digits: int = 1) -> str:
     return f"{mantissa} × 10{str(int(exponent)).translate(_SUPERSCRIPTS)}"
 
 
-def format_speedup(speedup: float) -> str:
-    """Format a speedup factor, e.g. ``212×`` or ``3.4×``."""
-    return f"{speedup:.0f}×" if speedup >= 10 else f"{speedup:.1f}×"
-
-
 def format_duration(seconds: float) -> str:
     """Format a duration for a table cell."""
     if seconds < 1.0:
         return f"{seconds * 1e3:.1f} ms"
     return f"{seconds:.2f} s"
+
+
+def format_measurement(median_s: float, std_s: float) -> str:
+    """Format ``median ± std`` with both values in the same unit."""
+    if median_s < 1.0:
+        return f"{median_s * 1e3:.2f} ± {std_s * 1e3:.2f} ms"
+    return f"{median_s:.2f} ± {std_s:.2f} s"
 
 
 def format_memory(gib: float) -> str:
@@ -122,6 +124,12 @@ def headline_speedup(results: Results) -> tuple[int, float] | None:
     return speedups[-1] if speedups else None
 
 
+def _cores(results: Results) -> str:
+    """Describe the physical core count of the benchmark machine."""
+    cores = results.ghz_meta.get("hardware", {}).get("cpu_cores", 0)
+    return f"{cores} physical core" + ("" if cores == 1 else "s")
+
+
 def _device_name(results: Results, target: str) -> str:
     hw = results.ghz_meta.get("hardware", {})
     if target == gb.GPU_TARGET:
@@ -144,17 +152,25 @@ def render_summary(results: Results) -> str:
     largest = largest_row(results)
     speedup = headline_speedup(results)
     if largest is not None:
-        backend = "GPU (cuStateVec)" if largest.target == gb.GPU_TARGET else "CPU backend"
+        device = _device_name(results, largest.target)
+        where = (
+            f"a {device} GPU (cuStateVec)"
+            if largest.target == gb.GPU_TARGET
+            else f"the CPU backend ({device})"
+        )
         sentences.append(
             f"GHZ circuits were simulated up to **{largest.n} qubits** "
-            f"({format_memory(largest.est_mem_gb)} statevector) on the {backend} "
-            f"({_device_name(results, largest.target)})."
+            f"({format_memory(largest.est_mem_gb)} statevector, "
+            f"{format_duration(largest.median_s)} per run) on {where}."
         )
     if speedup is not None:
         n, factor = speedup
         sentences.append(
             f"At {n} qubits, the largest size both backends completed, the GPU was "
-            f"**{format_speedup(factor)} faster** than CUDA-Q's CPU backend."
+            f"**{gb.format_speedup(factor)} faster** than CUDA-Q's `qpp-cpu` backend on the "
+            f"same machine ({_device_name(results, gb.CPU_TARGET)}, {_cores(results)}); "
+            "that baseline is a double-precision reference simulator, so read the factor "
+            "with the [limitations](#limitations) in mind."
         )
     elif largest is not None:
         sentences.append(
@@ -200,7 +216,7 @@ def render_ghz(results: Results) -> str:
     def cell(row: gb.BenchmarkRow | None) -> str:
         if row is None:
             return "—"
-        return f"{format_duration(row.median_s)} ± {format_duration(row.std_s)}"
+        return format_measurement(row.median_s, row.std_s)
 
     if gpu:
         lines += [
@@ -210,7 +226,7 @@ def render_ghz(results: Results) -> str:
         ]
         for n in sorted(cpu.keys() | gpu.keys()):
             ratio = (
-                format_speedup(cpu[n].median_s / gpu[n].median_s) if n in cpu and n in gpu else "—"
+                gb.format_speedup(cpu[n].median_s / gpu[n].median_s) if n in cpu and n in gpu else "—"
             )
             lines.append(f"| {n} | 2^{n} | {cell(cpu.get(n))} | {cell(gpu.get(n))} | {ratio} |")
     else:
@@ -322,7 +338,7 @@ def render_hardware(results: Results) -> str:
         else "none detected, so the `nvidia` target was skipped at runtime"
     )
     lines = [
-        f"- **CPU:** {hw['cpu']} ({hw['cpu_cores']} cores), {hw['ram_gib']:.0f} GiB RAM",
+        f"- **CPU:** {hw['cpu']} ({_cores(results)}), {hw['ram_gib']:.0f} GiB RAM",
         f"- **GPU:** {gpu_text}",
         f"- **OS:** {hw['os']}",
         f"- **Software:** CUDA-Q {hw['cudaq']}, Python {hw['python']}",
@@ -347,8 +363,9 @@ def render_resume(results: Results) -> str:
     if speedup is not None and largest.target == gb.GPU_TARGET:
         bullet = (
             f"GPU-accelerated statevector simulation up to {largest.n} qubits with NVIDIA "
-            f"CUDA-Q/cuStateVec ({format_speedup(speedup[1])} speedup over CPU at "
-            f"{speedup[0]} qubits); {vqe_clause}"
+            f"CUDA-Q/cuStateVec ({gb.format_speedup(speedup[1])} speedup over CUDA-Q's CPU "
+            f"backend at {speedup[0]} qubits on a {_device_name(results, gb.GPU_TARGET)}); "
+            f"{vqe_clause}"
         )
         return f"> {bullet}"
     bullet = (
